@@ -37,12 +37,3 @@ class RoundTripFlightPrice:
     price: float
     currency: str = "CAD"
     scraped_at: datetime = field(default_factory=datetime.utcnow)
-
-@dataclass
-class ScrapeTask:
-    airline: str
-    route: FlightRoute
-    outbound: DateRange
-    inbound: Optional[DateRange] = None
-    retries: int = 0
-    proxy: Optional[str] = None
