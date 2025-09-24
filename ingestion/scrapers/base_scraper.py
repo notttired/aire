@@ -8,5 +8,5 @@ class BaseScraper(ABC):
         self.browser = browser
 
     @abstractmethod
-    async def scrape(self, task: ScrapeTask) -> list[FlightPrice | RoundTripFlightPrice]:
+    async def scrape_html_content(self, task: ScrapeTask) -> str:
         pass

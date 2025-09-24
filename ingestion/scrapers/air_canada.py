@@ -12,7 +12,7 @@ class AirCanadaScraper(BaseScraper):
     def __init__(self, browser: Browser):
         super().__init__(browser)
 
-    async def scrape(self, request: ScrapeRequest) -> list[FlightPrice | RoundTripFlightPrice]:
+    async def scrape_html_content(self, request: ScrapeRequest) -> str:
         context = await self.browser.new_context()
         page = await context.new_page()
         await page.goto(BASE_URL)
@@ -37,7 +37,9 @@ class AirCanadaScraper(BaseScraper):
         # Wait for results
         await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{FOUND_URL}"))
         await page.screenshot(path = "page.png", full_page = True)
+        content = await page.content()
         await context.close()
+        return content
 
     def date_to_locator(self, date: datetime) -> str:
         """
