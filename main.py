@@ -1,8 +1,7 @@
 from playwright.async_api import async_playwright
 import asyncio
 
-from ingestion.air_canada import air_canada_scraper
-from ingestion.air_canada.air_canada_scraper import AirCanadaScraper
+from ingestion.scrapers.air_canada import AirCanadaScraper
 from models.scrape_task import ScrapeRequest
 from models.flight import *
 

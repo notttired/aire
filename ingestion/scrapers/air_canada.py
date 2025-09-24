@@ -1,13 +1,12 @@
-from abc import ABC, abstractmethod
 import re
 from models.flight import *
-from .constants import *
+from ingestion.constants.air_canada import *
 
-from ingestion.base_scraper import BaseScraper
+from ingestion.scrapers.base_scraper import BaseScraper
 from models.flight import FlightPrice
 from models.scrape_task import ScrapeRequest
 
-from playwright.async_api import Browser, async_playwright, Page
+from playwright.async_api import Browser, Page
 
 class AirCanadaScraper(BaseScraper):
     def __init__(self, browser: Browser):
