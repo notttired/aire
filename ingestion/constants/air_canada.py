@@ -1,7 +1,7 @@
 import re
 
 # Scraper
-DEFAULT_TIMEOUT_MS = 1000
+DEFAULT_TIMEOUT_MS = 60000
 
 BASE_URL = "https://www.aircanada.com/home/ca/en/aco/flights"
 
@@ -30,7 +30,6 @@ SEARCH_BUTTON_SELECTOR = "#bkmg-desktop_findButton"
 NOT_FOUND_URL = "https://www.aircanada.com/booking/ca/en/aco/no-flights-found"
 FOUND_URL = "https://www.aircanada.com/booking/ca/en/aco/availability/rt/outbound"
 ONE_WAY_FOUND_URL = "https://www.aircanada.com/booking/ca/en/aco/availability/ow/outbound"
-
 
 # Extractor
 DEPART_TIME_SELECTOR = 'div[bound-departure] div[bound-information] span[bound-location]'

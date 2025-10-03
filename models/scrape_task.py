@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
@@ -17,4 +16,4 @@ class ScrapeRequest(BaseModel):
     outbound: datetime
     airline: str = "AC"
     retries: int = 0
-    proxy: Optional[str] = None
+    proxy: Optional[dict] = None

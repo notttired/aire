@@ -1,15 +1,11 @@
-from playwright.async_api import async_playwright, Browser
-from typing import Dict, List
+from playwright.async_api import Browser
+from typing import List
 
 from models.flight import FlightPrice
 from models.scrape_task import ScrapeRequest
 
-# Airline Imports
-from ingestion.scrapers.base_scraper import BaseScraper
-from ingestion.extractors.base_extractor import BaseExtractor
-
 from orchestration.airlines import AIRLINES
-# from storage.temp_storage import append_to_file
+from storage.temp_storage import append_to_file
 
 
 class ScraperOrchestrator:
@@ -24,8 +20,13 @@ class ScraperOrchestrator:
 
         scraper = airline["scraper"](self.browser)
         extractor = airline["extractor"]()
-        html_content = await scraper.scrape_html_content(request)
+
+        context = await self.new_context(request.proxy)
+        html_content = await scraper.scrape_html_content(request, context)
         scrape_prices: List[FlightPrice] = extractor.extract_flight_price(request, html_content)
         print(scrape_prices)
-        # append_to_file(scrape_prices)
+        append_to_file(scrape_prices)
         return scrape_prices
+
+    async def new_context(self, proxy=None):
+        return await self.browser.new_context(proxy=proxy)

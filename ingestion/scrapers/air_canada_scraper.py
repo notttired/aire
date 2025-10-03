@@ -6,7 +6,7 @@ from ingestion.scrapers.base_scraper import BaseScraper
 from models.flight import FlightPrice
 from models.scrape_task import ScrapeRequest
 
-from playwright.async_api import Browser, Page
+from playwright.async_api import Browser, Page, BrowserContext
 
 
 # noinspection DuplicatedCode
@@ -14,11 +14,10 @@ class AirCanadaScraper(BaseScraper):
     def __init__(self, browser: Browser):
         super().__init__(browser)
 
-    async def scrape_html_content(self, request: ScrapeRequest) -> str:
-        return await self.scrape_html_content_one_way(request)
+    async def scrape_html_content(self, request: ScrapeRequest, context: BrowserContext) -> str:
+        return await self.scrape_html_content_one_way(request, context)
 
-    async def scrape_html_content_one_way(self, request: ScrapeRequest) -> str:
-        context = await self.browser.new_context()
+    async def scrape_html_content_one_way(self, request: ScrapeRequest, context: BrowserContext) -> str:
         page = await context.new_page()
         await page.goto(BASE_URL)
 
@@ -43,7 +42,8 @@ class AirCanadaScraper(BaseScraper):
         await page.click(SEARCH_BUTTON_SELECTOR)
 
         # Wait for results
-        await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"))
+        await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
+        await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"), timeout=DEFAULT_TIMEOUT_MS)
         await page.screenshot(path="page.png", full_page=True)
         content = await page.content()
         await context.close()
