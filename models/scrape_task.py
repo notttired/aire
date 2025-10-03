@@ -1,23 +1,20 @@
 from dataclasses import dataclass
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-from .flight import FlightRoute, DateRange
+from models.flight import FlightRoute, DateRange
 
-@dataclass
-class ScrapeTask:
-    airline: str
+class ScrapeTask(BaseModel):
     route: FlightRoute
     outbound: DateRange
     inbound: Optional[DateRange] = None
     retries: int = 0
     proxy: Optional[str] = None
 
-@dataclass(frozen=True)
-class ScrapeRequest:
-    airline: str
+class ScrapeRequest(BaseModel):
     route: FlightRoute
     outbound: datetime
-    inbound: Optional[datetime] = None
+    airline: str = "AC"
     retries: int = 0
     proxy: Optional[str] = None

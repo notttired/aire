@@ -8,11 +8,48 @@ from models.scrape_task import ScrapeRequest
 
 from playwright.async_api import Browser, Page
 
+
+# noinspection DuplicatedCode
 class AirCanadaScraper(BaseScraper):
     def __init__(self, browser: Browser):
         super().__init__(browser)
 
     async def scrape_html_content(self, request: ScrapeRequest) -> str:
+        return await self.scrape_html_content_one_way(request)
+
+    async def scrape_html_content_one_way(self, request: ScrapeRequest) -> str:
+        context = await self.browser.new_context()
+        page = await context.new_page()
+        await page.goto(BASE_URL)
+
+        # Select trip type
+        await page.click(TRIP_TYPE_SELECTOR)
+        await page.click(ONE_WAY_TRIP_SELECTOR)
+
+        # Fill in FlightRoute
+        await page.click(DEPARTURE_LOCATION_SELECTOR)
+        await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
+        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+        await page.click(ARRIVAL_LOCATION_SELECTOR)
+        await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
+        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+
+        # Fill in time
+        # Add logic for handling date not within shown window (need to click next)
+        await page.click(DATE_SELECTOR)
+        await page.locator(self.__date_to_locator(request.outbound)).first.click()
+        await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
+
+        await page.click(SEARCH_BUTTON_SELECTOR)
+
+        # Wait for results
+        await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"))
+        await page.screenshot(path="page.png", full_page=True)
+        content = await page.content()
+        await context.close()
+        return content
+
+    async def scrape_html_content_round_trip(self, request: ScrapeRequest) -> str:
         context = await self.browser.new_context()
         page = await context.new_page()
         await page.goto(BASE_URL)
@@ -20,16 +57,16 @@ class AirCanadaScraper(BaseScraper):
         # Fill in FlightRoute
         await page.click(DEPARTURE_LOCATION_SELECTOR)
         await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
-        await self.safe_click(page, SEARCH_RESULT_SELECTOR_0)
+        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
         await page.click(ARRIVAL_LOCATION_SELECTOR)
         await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
-        await self.safe_click(page, SEARCH_RESULT_SELECTOR_0)
+        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
 
         # Fill in time
         # Add logic for handling date not within shown window (need to click next)
         await page.click(DEPARTURE_DATE_SELECTOR)
-        await page.locator(self.date_to_locator(request.outbound)).first.click()
-        await page.locator(self.date_to_locator(request.inbound)).first.click()
+        await page.locator(self.__date_to_locator(request.outbound)).first.click()
+        await page.locator(self.__date_to_locator(request.inbound)).first.click()
         await page.click(CONFIRM_DATES_SELECTOR)
 
         await page.click(SEARCH_BUTTON_SELECTOR)
@@ -41,7 +78,7 @@ class AirCanadaScraper(BaseScraper):
         await context.close()
         return content
 
-    def date_to_locator(self, date: datetime) -> str:
+    def __date_to_locator(self, date: datetime) -> str:
         """
         :param date: datetime
         :return: Playwright attribute selector for date for searching for flights
@@ -49,7 +86,7 @@ class AirCanadaScraper(BaseScraper):
         out = f'td[data-date="{date.day}"][data-month="{date.month}"][data-year="{date.year}"]'
         return out
 
-    async def safe_click(self, page: Page, selector: str) -> bool:
+    async def __safe_click(self, page: Page, selector: str) -> bool:
         """
         Clicks if it appears within timeout
         :param page: Page

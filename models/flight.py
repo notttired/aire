@@ -1,39 +1,24 @@
 from dataclasses import dataclass, field
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 
-@dataclass(frozen=True)
-class FlightRoute:
+class FlightRoute(BaseModel):
     origin: str
     destination: str
 
-@dataclass(frozen=True)
-class DateRange:
+class DateRange(BaseModel):
     start: datetime
     end: datetime
 
-@dataclass(frozen=True)
-class Flight:
+class Flight(BaseModel):
     route: FlightRoute
     date_range: DateRange
-    flight_number: str
+    flight_number: Optional[str] = None # Later implement
     stops: Optional[List[str]] = field(default_factory=list)
 
-@dataclass(frozen=True)
-class RoundTripFlight:
-    outbound: Flight
-    inbound: Flight
-
-@dataclass
-class FlightPrice:
+class FlightPrice(BaseModel):
     flight: Flight
-    price: float
-    currency: str = "CAD"
-    scraped_at: datetime = field(default_factory=datetime.utcnow)
-
-@dataclass
-class RoundTripFlightPrice:
-    round_trip: RoundTripFlight
     price: float
     currency: str = "CAD"
     scraped_at: datetime = field(default_factory=datetime.utcnow)
