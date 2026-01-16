@@ -7,7 +7,8 @@ from models.flight import FlightPrice
 from models.scrape_task import ScrapeRequest
 
 from playwright.async_api import Browser, Page, BrowserContext
-
+import logging
+logger = logging.getLogger(__name__)
 
 # noinspection DuplicatedCode
 class AirCanadaScraper(BaseScraper):
@@ -22,24 +23,27 @@ class AirCanadaScraper(BaseScraper):
         await page.goto(BASE_URL)
 
         # Select trip type
-        await page.click(TRIP_TYPE_SELECTOR)
-        await page.click(ONE_WAY_TRIP_SELECTOR)
+        await self.__safe_click(page, TRIP_TYPE_SELECTOR)
+        await self.__safe_click(page, ONE_WAY_TRIP_SELECTOR)
+        logger.info("Selected one way trip type")
 
         # Fill in FlightRoute
-        await page.click(DEPARTURE_LOCATION_SELECTOR)
+        await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
         await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
         await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
-        await page.click(ARRIVAL_LOCATION_SELECTOR)
+        await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
         await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
         await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+        logger.info("Filled in flight route")
 
         # Fill in time
         # Add logic for handling date not within shown window (need to click next)
-        await page.click(DATE_SELECTOR)
+        await self.__safe_click(page, DATE_SELECTOR)
         await page.locator(self.__date_to_locator(request.outbound)).first.click()
         await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
+        logger.info("Filled in date")
 
-        await page.click(SEARCH_BUTTON_SELECTOR)
+        await self.__safe_click(page, SEARCH_BUTTON_SELECTOR)
 
         # Wait for results
         await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
@@ -95,8 +99,39 @@ class AirCanadaScraper(BaseScraper):
         """
         locator = page.locator(selector)
         if await locator.is_visible(timeout=DEFAULT_TIMEOUT_MS):
-            await locator.click()
+            await locator.dispatch_event("click")
             return True
         else:
-            print("Button not found")
+            logger.info("Button not found")
             return False
+
+    async def prepare_page(self, page):
+        # Apply this to your context or page
+        await page.add_init_script("""
+            (function() {
+                const injectStyles = () => {
+                    const css = `
+                        html, body, * {
+                            scroll-behavior: auto !important;
+                            transition: none !important;
+                            animation: none !important;
+                        }
+                    `;
+                    const head = document.head || document.getElementsByTagName('head')[0];
+                    if (head) {
+                        const style = document.createElement('style');
+                        style.type = 'text/css';
+                        style.id = 'force-instant-scroll';
+                        style.appendChild(document.createTextNode(css));
+                        head.appendChild(style);
+                    }
+                };
+
+                // Run immediately
+                injectStyles();
+
+                // Also run whenever the DOM changes to ensure we override dynamic styles
+                const observer = new MutationObserver(injectStyles);
+                observer.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        """)

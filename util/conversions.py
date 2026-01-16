@@ -36,11 +36,7 @@ def _decode_value(value: Any):
     return value
 
 def scrape_request_to_json(req: ScrapeRequest) -> Dict:
-    """Convert ScrapeRequest → JSON-serializable dict."""
-    raw = req.model_dump()
-    return _encode_value(raw)
+    return req.model_dump(mode="json")
 
 def scrape_request_from_json(data: Dict) -> ScrapeRequest:
-    """Convert JSON dict → ScrapeRequest (rehydrated)."""
-    decoded = _decode_value(data)
-    return ScrapeRequest.model_validate(decoded)
+    return ScrapeRequest.model_validate(data)

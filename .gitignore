@@ -191,3 +191,5 @@ cython_debug/
 
 # Own
 temp.*
+.DS_Store
+temp_data.json

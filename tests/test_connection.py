@@ -5,7 +5,7 @@
 #     assert "air" in page.title()
 from datetime import datetime
 
-from celery_queue.tasks import extract
+from celery_config.tasks import extract
 from models.flight import FlightRoute
 from models.scrape_task import ScrapeRequest
 from util.conversions import scrape_request_to_json

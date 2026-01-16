@@ -1,10 +1,11 @@
 from celery import Celery
-
+import os
 
 app = Celery(
 'celery_app',
-    broker='pyamqp://guest@localhost//',
-    backend="redis://localhost:6379/0"
+    broker = os.getenv("AMQP_URL", 'pyamqp://guest@localhost//'),
+    backend = os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    include=["tasks"]
 )
 
 app.conf.update(
@@ -15,9 +16,7 @@ app.conf.update(
 )
 
 app.conf.update(
-    include=["celery_queue.tasks"]
+    include=["celery_config.tasks"]
 )
-
-# app.autodiscover_tasks(["aire.celery_queue"])
 
 # celery -A celery_app.app worker --loglevel=INFO
