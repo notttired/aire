@@ -20,39 +20,41 @@ class AirCanadaScraper(BaseScraper):
 
     async def scrape_html_content_one_way(self, request: ScrapeRequest, context: BrowserContext) -> str:
         page = await context.new_page()
-        await page.goto(BASE_URL)
+        try:
+            await page.goto(BASE_URL)
 
-        # Select trip type
-        await page.click(TRIP_TYPE_SELECTOR)
-        await page.click(ONE_WAY_TRIP_SELECTOR)
-        logger.info("Selected one way trip type")
+            # Select trip type
+            await page.click(TRIP_TYPE_SELECTOR)
+            await page.click(ONE_WAY_TRIP_SELECTOR)
+            logger.info("Selected one way trip type")
 
-        # Fill in FlightRoute
-        await page.click(DEPARTURE_LOCATION_SELECTOR)
-        # await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
-        await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
-        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
-        await page.click(ARRIVAL_LOCATION_SELECTOR)
-        # await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
-        await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
-        await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
-        logger.info("Filled in flight route")
+            # Fill in FlightRoute
+            await page.click(DEPARTURE_LOCATION_SELECTOR)
+            # await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
+            await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
+            await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+            await page.click(ARRIVAL_LOCATION_SELECTOR)
+            # await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
+            await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
+            await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+            logger.info("Filled in flight route")
 
-        # Fill in time
-        # Add logic for handling date not within shown window (need to click next)
-        await self.__safe_click(page, DATE_SELECTOR)
-        await page.locator(self.__date_to_locator(request.outbound)).first.click()
-        await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
-        logger.info("Filled in date")
+            # Fill in time
+            # Add logic for handling date not within shown window (need to click next)
+            await self.__safe_click(page, DATE_SELECTOR)
+            await page.locator(self.__date_to_locator(request.outbound)).first.click()
+            await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
+            logger.info("Filled in date")
 
-        await self.__safe_click(page, SEARCH_BUTTON_SELECTOR)
+            await self.__safe_click(page, SEARCH_BUTTON_SELECTOR)
 
-        # Wait for results
-        await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
-        await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"), timeout=DEFAULT_TIMEOUT_MS)
-        await page.screenshot(path="page.png", full_page=True)
-        content = await page.content()
-        await context.close()
+            # Wait for results
+            await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
+            await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"), timeout=DEFAULT_TIMEOUT_MS)
+            await page.screenshot(path="page.png", full_page=True)
+            content = await page.content()
+        finally:
+            await page.close()
         return content
 
     async def scrape_html_content_round_trip(self, request: ScrapeRequest) -> str:

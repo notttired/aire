@@ -1,7 +1,7 @@
 import re
 
 # Scraper
-DEFAULT_TIMEOUT_MS = 10000
+DEFAULT_TIMEOUT_MS = 60000
 
 BASE_URL = "https://www.aircanada.com/home/ca/en/aco/flights"
 

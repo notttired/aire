@@ -4,6 +4,13 @@ from models.flight import FlightPrice
 from datetime import datetime
 
 
+def safe_append_to_file(prices):
+    try:
+        append_to_file(prices)
+    except Exception as e:
+        print(e)
+        pass
+
 def append_to_file(flight_prices: List[FlightPrice]) -> None:
     data = {}
     if os.path.exists("temp_data.json"):

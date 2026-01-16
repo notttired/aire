@@ -20,7 +20,7 @@ async def run_sample_task():
         outbound=datetime(2026, 1, 18, 0, 0, 0)
     )
 
-    browser_mgr = BrowserManager(config={"headless": True})
+    browser_mgr = BrowserManager(config={"headless": False})
     await browser_mgr.start()
     browser = browser_mgr.get_browser()
     orch = ScraperOrchestrator(browser)
@@ -38,11 +38,11 @@ def send_sample_task():
     )
     t_id = scrape.delay(scrape_request_to_json(sample_req)).id
     res = AsyncResult(t_id)
-    res = res.get()
+    res = res.get(timeout=60000)
     print(res)
 
 if __name__ == "__main__":
-    # send_sample_task()
-    logging.basicConfig(level=logging.INFO)
-
-    asyncio.run(run_sample_task())
+    send_sample_task()
+    # logging.basicConfig(level=logging.INFO)
+    #
+    # asyncio.run(run_sample_task())
