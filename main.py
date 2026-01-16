@@ -1,6 +1,9 @@
 import logging
 from datetime import datetime
 import asyncio
+
+from celery.result import AsyncResult
+
 from models.flight import FlightRoute
 from models.scrape_task import ScrapeRequest
 from orchestration.scraper_orchestrator import ScraperOrchestrator
@@ -33,10 +36,13 @@ def send_sample_task():
         ),
         outbound=datetime(2026, 1, 18, 0, 0, 0)
     )
-    scrape.delay(scrape_request_to_json(sample_req))
+    t_id = scrape.delay(scrape_request_to_json(sample_req)).id
+    res = AsyncResult(t_id)
+    res = res.get()
+    print(res)
 
 if __name__ == "__main__":
-    send_sample_task()
-    # logging.basicConfig(level=logging.INFO)
-    #
-    # asyncio.run(run_sample_task())
+    # send_sample_task()
+    logging.basicConfig(level=logging.INFO)
+
+    asyncio.run(run_sample_task())

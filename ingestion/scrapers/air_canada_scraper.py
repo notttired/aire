@@ -23,15 +23,17 @@ class AirCanadaScraper(BaseScraper):
         await page.goto(BASE_URL)
 
         # Select trip type
-        await self.__safe_click(page, TRIP_TYPE_SELECTOR)
-        await self.__safe_click(page, ONE_WAY_TRIP_SELECTOR)
+        await page.click(TRIP_TYPE_SELECTOR)
+        await page.click(ONE_WAY_TRIP_SELECTOR)
         logger.info("Selected one way trip type")
 
         # Fill in FlightRoute
-        await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
+        await page.click(DEPARTURE_LOCATION_SELECTOR)
+        # await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
         await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
         await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
-        await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
+        await page.click(ARRIVAL_LOCATION_SELECTOR)
+        # await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
         await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
         await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
         logger.info("Filled in flight route")
@@ -92,17 +94,19 @@ class AirCanadaScraper(BaseScraper):
 
     async def __safe_click(self, page: Page, selector: str) -> bool:
         """
-        Clicks if it appears within timeout
+        Clicks if it is visible
         :param page: Page
         :param selector: str Any selector
         :return: Success
         """
         locator = page.locator(selector)
-        if await locator.is_visible(timeout=DEFAULT_TIMEOUT_MS):
-            await locator.dispatch_event("click")
+        try:
+            if await locator.is_visible():
+                await locator.dispatch_event("click")
             return True
-        else:
-            logger.info("Button not found")
+        except Exception as e:
+            logger.info(f"Button not found: {selector}")
+            logger.info(f"Exception: {e}")
             return False
 
     async def prepare_page(self, page):

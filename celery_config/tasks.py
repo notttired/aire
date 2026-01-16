@@ -1,3 +1,5 @@
+import asyncio
+
 from celery_app import app
 from celery_config.base_tasks import ManagedTask
 from orchestration.scraper_orchestrator import ScraperOrchestrator
@@ -17,10 +19,8 @@ def scrape(self, request_dict: dict):
 
         try:
             orch = ScraperOrchestrator(self.browser_mgr.get_browser())
-            flight_prices = await orch.scrape_request(request)
+            return await orch.scrape_request(request)
         finally:
             await self.proxy_mgr.release(proxy)
 
-        return flight_prices
-
-    return self.loop.run_until_complete(run_scrape())
+    return asyncio.run(run_scrape())
