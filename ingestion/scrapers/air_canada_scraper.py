@@ -51,7 +51,7 @@ class AirCanadaScraper(BaseScraper):
             # Wait for results
             await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
             await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"), timeout=DEFAULT_TIMEOUT_MS)
-            await page.screenshot(path="page.png", full_page=True)
+            # await page.screenshot(path="page.png", full_page=True)
             content = await page.content()
         finally:
             await page.close()

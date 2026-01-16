@@ -36,6 +36,7 @@ def send_sample_task():
         ),
         outbound=datetime(2026, 1, 18, 0, 0, 0)
     )
+
     t_id = scrape.delay(scrape_request_to_json(sample_req)).id
     res = AsyncResult(t_id)
     res = res.get(timeout=60000)

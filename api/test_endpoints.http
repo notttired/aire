@@ -1,0 +1,13 @@
+POST http://localhost:8000/scrape
+Content-Type: application/json
+
+{
+  "route":{
+    "origin":"YYZ",
+    "destination":"YYC"
+  },
+  "outbound":"2026-01-18T00:00:00",
+  "airline":"AC",
+  "retries":0,
+  "proxy":null
+}
