@@ -38,7 +38,7 @@ class ScraperOrchestrator:
             logger.info(f"Scraped html content")
             scrape_prices: List[FlightPrice] = extractor.extract_flight_price(request, html_content)
             logger.info(scrape_prices)
-            safe_append_to_file(scrape_prices)
+            # safe_append_to_file(scrape_prices)
         finally:
             await context.close()
         return scrape_prices

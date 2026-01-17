@@ -1,0 +1,47 @@
+services:
+  api:
+    build: .
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uv run python -m api.api
+    env_file:
+      - .env
+    depends_on:
+      scraper-engine:
+        condition: service_started
+    ports:
+      - "8000:8000"
+
+  scraper-engine:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uv run celery -A celery_app worker --loglevel=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+#    ports:
+#      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
