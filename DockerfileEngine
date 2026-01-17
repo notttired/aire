@@ -1,0 +1,17 @@
+FROM python:3.13
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev
+
+RUN apt-get update && \
+    uv run playwright install --with-deps firefox && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN uv run celery -A celery_app worker --loglevel=INFO
