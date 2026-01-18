@@ -1,3 +1,4 @@
+import asyncio
 import re
 from models.flight import *
 from ingestion.constants.air_canada import *
@@ -23,28 +24,63 @@ class AirCanadaScraper(BaseScraper):
         try:
             await page.goto(BASE_URL)
 
+            await page.add_init_script("""
+                // 1. Disable Element-level scrolling (most common for 'deals')
+                Element.prototype.scrollIntoView = function() {};
+                Element.prototype.scrollTo = function() {};
+                Element.prototype.scrollBy = function() {};
+
+                // 2. Disable Window-level scrolling
+                window.scrollTo = function() {};
+                window.scroll = function() {};
+                window.scrollBy = function() {};
+
+                // 3. Prevent focus from jumping the page
+                const originalFocus = HTMLElement.prototype.focus;
+                HTMLElement.prototype.focus = function(options) {
+                    if (options) {
+                        options.preventScroll = true;
+                    } else {
+                        options = { preventScroll: true };
+                    }
+                    originalFocus.call(this, options);
+                };
+            """)
+
+            await page.add_style_tag(content="""
+                html, body {
+                    overflow: hidden !important;
+                    height: 100% !important;
+                    position: fixed !important;
+                    width: 100% !important;
+                }
+            """)
+
             # Select trip type
-            await page.click(TRIP_TYPE_SELECTOR)
-            await page.click(ONE_WAY_TRIP_SELECTOR)
+            logger.info("Starting to scrape")
+
+            await page.click(TRIP_TYPE_SELECTOR, force=True)
+            await page.click(ONE_WAY_TRIP_SELECTOR, force=True)
             logger.info("Selected one way trip type")
 
             # Fill in FlightRoute
-            await page.click(DEPARTURE_LOCATION_SELECTOR)
-            # await self.__safe_click(page, DEPARTURE_LOCATION_SELECTOR)
+            await page.click(DEPARTURE_LOCATION_SELECTOR, force=True)
             await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
             await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
+
+
             await page.click(ARRIVAL_LOCATION_SELECTOR)
-            # await self.__safe_click(page, ARRIVAL_LOCATION_SELECTOR)
             await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
             await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
             logger.info("Filled in flight route")
 
             # Fill in time
             # Add logic for handling date not within shown window (need to click next)
-            await self.__safe_click(page, DATE_SELECTOR)
+            await page.click(DATE_SELECTOR, force=True)
             await page.locator(self.__date_to_locator(request.outbound)).first.click()
             await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
             logger.info("Filled in date")
+            logger.info("Searching for flight route")
 
             await self.__safe_click(page, SEARCH_BUTTON_SELECTOR)
 
@@ -93,6 +129,24 @@ class AirCanadaScraper(BaseScraper):
         """
         out = f'td[data-date="{date.day}"][data-month="{date.month}"][data-year="{date.year}"]'
         return out
+
+    async def _safe_event(self, page: Page, selector: str, event: str):
+        """
+        Clicks if it is visible
+        :param page: Page
+        :param selector: str Any selector
+        :param event: str Any event (click, check, ...)
+        :return: Success
+        """
+        locator = page.locator(selector)
+        try:
+            if await locator.is_visible():
+                await locator.dispatch_event(event)
+            return True
+        except Exception as e:
+            logger.info(f"Not found: {selector}")
+            logger.info(f"Exception: {e}")
+            return False
 
     async def __safe_click(self, page: Page, selector: str) -> bool:
         """
