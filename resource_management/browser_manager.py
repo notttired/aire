@@ -1,7 +1,7 @@
 from playwright.async_api import async_playwright
 
 class BrowserManager:
-    def __init__(self, browser_type: str ="firefox", config: dict = None):
+    def __init__(self, browser_type: str ="chromium", config: dict = None):
         self.browser_type = browser_type
         self.config = config or {}
         self.playwright = None

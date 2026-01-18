@@ -12,4 +12,8 @@ RUN apt-get update && \
     uv run playwright install --with-deps firefox && \
     rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && \
+    uv run playwright install --with-deps chromium && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY . .
