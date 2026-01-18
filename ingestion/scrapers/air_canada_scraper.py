@@ -11,6 +11,8 @@ from playwright.async_api import Browser, Page, BrowserContext
 import logging
 logger = logging.getLogger(__name__)
 
+import traceback
+
 # noinspection DuplicatedCode
 class AirCanadaScraper(BaseScraper):
     def __init__(self, browser: Browser):
@@ -23,38 +25,6 @@ class AirCanadaScraper(BaseScraper):
         page = await context.new_page()
         try:
             await page.goto(BASE_URL)
-
-            await page.add_init_script("""
-                // 1. Disable Element-level scrolling (most common for 'deals')
-                Element.prototype.scrollIntoView = function() {};
-                Element.prototype.scrollTo = function() {};
-                Element.prototype.scrollBy = function() {};
-
-                // 2. Disable Window-level scrolling
-                window.scrollTo = function() {};
-                window.scroll = function() {};
-                window.scrollBy = function() {};
-
-                // 3. Prevent focus from jumping the page
-                const originalFocus = HTMLElement.prototype.focus;
-                HTMLElement.prototype.focus = function(options) {
-                    if (options) {
-                        options.preventScroll = true;
-                    } else {
-                        options = { preventScroll: true };
-                    }
-                    originalFocus.call(this, options);
-                };
-            """)
-
-            await page.add_style_tag(content="""
-                html, body {
-                    overflow: hidden !important;
-                    height: 100% !important;
-                    position: fixed !important;
-                    width: 100% !important;
-                }
-            """)
 
             # Select trip type
             logger.info("Starting to scrape")
@@ -164,34 +134,3 @@ class AirCanadaScraper(BaseScraper):
             logger.info(f"Button not found: {selector}")
             logger.info(f"Exception: {e}")
             return False
-
-    async def prepare_page(self, page):
-        # Apply this to your context or page
-        await page.add_init_script("""
-            (function() {
-                const injectStyles = () => {
-                    const css = `
-                        html, body, * {
-                            scroll-behavior: auto !important;
-                            transition: none !important;
-                            animation: none !important;
-                        }
-                    `;
-                    const head = document.head || document.getElementsByTagName('head')[0];
-                    if (head) {
-                        const style = document.createElement('style');
-                        style.type = 'text/css';
-                        style.id = 'force-instant-scroll';
-                        style.appendChild(document.createTextNode(css));
-                        head.appendChild(style);
-                    }
-                };
-
-                // Run immediately
-                injectStyles();
-
-                // Also run whenever the DOM changes to ensure we override dynamic styles
-                const observer = new MutationObserver(injectStyles);
-                observer.observe(document.documentElement, { childList: true, subtree: true });
-            })();
-        """)
