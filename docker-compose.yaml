@@ -18,7 +18,7 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
-    command: uv run celery -A celery_app worker --loglevel=INFO
+    command: uv run celery -A celery_app worker --loglevel=INFO --concurrency=2
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -32,14 +32,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    ports:
-      - "6379:6379"
+#    ports:
+#      - "6379:6379"
 
   rabbitmq:
     image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
