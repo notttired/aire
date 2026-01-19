@@ -76,8 +76,6 @@ class AirCanadaScraper(BaseScraper):
                 await page.wait_for_selector(DEPARTURE_FORM_SELECTOR, state="visible")
                 await page.fill(DEPARTURE_FORM_SELECTOR, request.route.origin)
 
-                # Wait for the specific result entry to appear in the dropdown
-                await page.wait_for_selector(SEARCH_RESULT_SELECTOR_0, state="visible")
                 await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
 
             # 4. Handle Arrival Input
@@ -88,24 +86,25 @@ class AirCanadaScraper(BaseScraper):
                 await page.wait_for_selector(ARRIVAL_FORM_SELECTOR, state="visible")
                 await page.fill(ARRIVAL_FORM_SELECTOR, request.route.destination)
 
-                await page.wait_for_selector(SEARCH_RESULT_SELECTOR_0, state="visible")
                 await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
 
+            await page.click("#pillsContainerRef")  # Closes previous dropdown if open
             logger.info("Filled in flight route")
 
             # 5. Handle Date Selection
             await page.click(DATE_SELECTOR)
-
             date_locator = page.locator(self.__date_to_locator(request.outbound)).first
             # Explicitly wait for the specific date to render in the calendar
             await date_locator.wait_for(state="attached", timeout=DEFAULT_TIMEOUT_MS)
             await date_locator.click()
 
             await self.__safe_click(page, CONFIRM_DATES_SELECTOR)
+            await page.click("#pillsContainerRef")  # Closes previous dropdown if open
             logger.info("Date confirmed. Executing search...")
 
             # 6. Execute Search and Wait for Redirection
-            await self.__safe_click(page, SEARCH_BUTTON_SELECTOR)
+            await page.wait_for_selector(SEARCH_BUTTON_SELECTOR, state="visible")
+            await page.click(SEARCH_BUTTON_SELECTOR)
 
             # Instead of waiting for a load state, we wait for the URL to match our result pattern
             # This is the most reliable way to confirm the search was submitted
