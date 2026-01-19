@@ -3,8 +3,8 @@ import os
 
 app = Celery(
 'celery_app',
-    broker = os.getenv("AMQP_URL"),
-    backend = os.getenv("REDIS_URL"),
+    broker = os.getenv("AMQP_URL", "amqp://guest:guest@localhost:5672//"),
+    backend = os.getenv("REDIS_URL", "redis://localhost:6379/0"),
     include=["tasks"]
 )
 

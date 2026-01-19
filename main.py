@@ -17,10 +17,10 @@ async def run_sample_task():
             origin="YYZ",
             destination="YYC"
         ),
-        outbound=datetime(2026, 1, 18, 0, 0, 0)
+        outbound=datetime(2026, 1, 20, 0, 0, 0)
     )
 
-    browser_mgr = BrowserManager(config={"headless": False})
+    browser_mgr = BrowserManager(config={"headless": True})
     await browser_mgr.start()
     browser = browser_mgr.get_browser()
     orch = ScraperOrchestrator(browser)
@@ -34,7 +34,7 @@ def send_sample_task():
             origin="YYZ",
             destination="YYC"
         ),
-        outbound=datetime(2026, 1, 18, 0, 0, 0)
+        outbound=datetime(2026, 1, 20, 0, 0, 0)
     )
 
     t_id = scrape.delay(scrape_request_to_json(sample_req)).id

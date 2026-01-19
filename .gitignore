@@ -193,3 +193,5 @@ cython_debug/
 temp.*
 .DS_Store
 temp_data.json
+trace.zip
+*.png

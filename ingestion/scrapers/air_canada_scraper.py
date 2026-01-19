@@ -24,6 +24,15 @@ class AirCanadaScraper(BaseScraper):
     async def scrape_html_content_one_way(self, request: ScrapeRequest, context: BrowserContext) -> str:
         page = await context.new_page()
         try:
+            # client = await page.context.new_cdp_session(page)
+            #
+            # # Set CPU throttling rate
+            # # 4 means 4x slower than your host machine
+            # # 6 is often used to simulate a budget mobile device or weak VPS
+            # await client.send("Emulation.setCPUThrottlingRate", {"rate": 8})
+
+            await page.goto("https://aircanada.com", wait_until="domcontentloaded")
+
             await page.goto(BASE_URL)
 
             # Select trip type
@@ -36,12 +45,14 @@ class AirCanadaScraper(BaseScraper):
             # Fill in FlightRoute
             await page.click(DEPARTURE_LOCATION_SELECTOR, force=True)
             await page.type(DEPARTURE_FORM_SELECTOR, request.route.origin)
+            await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
             await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
 
             await page.click("#pillsContainerRef", force=True)
 
             await page.click(ARRIVAL_LOCATION_SELECTOR)
             await page.type(ARRIVAL_FORM_SELECTOR, request.route.destination)
+            await page.wait_for_load_state("domcontentloaded", timeout=DEFAULT_TIMEOUT_MS)
             await self.__safe_click(page, SEARCH_RESULT_SELECTOR_0)
             logger.info("Filled in flight route")
 
@@ -61,6 +72,7 @@ class AirCanadaScraper(BaseScraper):
             await page.wait_for_url(re.compile(rf"{NOT_FOUND_URL}|{ONE_WAY_FOUND_URL}"), timeout=DEFAULT_TIMEOUT_MS)
             # await page.screenshot(path="results.png", full_page=True)
             content = await page.content()
+            logger.info("Found flight route information")
         finally:
             await page.close()
         return content
